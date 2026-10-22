@@ -1,12 +1,13 @@
 import { motion, useScroll, useSpring } from 'framer-motion';
-import { useRef } from 'react';
+import { useId, useRef } from 'react';
 
-/** Hand-drawn spark; strokes draw in on view. */
+/** Hand-drawn spark; strokes draw in on view with purple-gradient stroke. */
 export function Spark({
   className = 'h-8 w-8',
 }: {
   className?: string;
 }) {
+  const gradId = useId();
   const p = {
     initial: { pathLength: 0 },
     whileInView: { pathLength: 1 },
@@ -22,11 +23,18 @@ export function Spark({
       viewBox="0 0 40 40"
       className={className}
       fill="none"
-      stroke="#0A0A0A"
+      stroke={`url(#${gradId})`}
       strokeWidth="3"
       strokeLinecap="round"
       aria-hidden
     >
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#2B0B5E" />
+          <stop offset="55%" stopColor="#4C1D95" />
+          <stop offset="100%" stopColor="#7C3AED" />
+        </linearGradient>
+      </defs>
       <motion.path d="M8 6 L14 16" {...p} />
 
       <motion.path
@@ -50,7 +58,7 @@ export function Spark({
   );
 }
 
-/** Scribble underline that draws itself. */
+/** Scribble underline that draws itself in purple-gradient. */
 export function Scribble({
   delay = 0,
   className = '',
@@ -58,6 +66,7 @@ export function Scribble({
   delay?: number;
   className?: string;
 }) {
+  const gradId = useId();
   return (
     <svg
       viewBox="0 0 300 24"
@@ -66,9 +75,16 @@ export function Scribble({
       aria-hidden
       preserveAspectRatio="none"
     >
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#2B0B5E" />
+          <stop offset="55%" stopColor="#4C1D95" />
+          <stop offset="100%" stopColor="#7C3AED" />
+        </linearGradient>
+      </defs>
       <motion.path
         d="M4 16 C 50 4, 110 24, 170 10 S 260 18, 296 6"
-        stroke="#3F3F46"
+        stroke={`url(#${gradId})`}
         strokeWidth="5"
         strokeLinecap="round"
         initial={{ pathLength: 0 }}
@@ -83,7 +99,7 @@ export function Scribble({
   );
 }
 
-/** Thin curved line that draws as the page scrolls. */
+/** Thin curved line that draws as the page scrolls with purple-gradient stroke. */
 export function ScrollLine({
   d,
   viewBox = '0 0 400 400',
@@ -93,7 +109,7 @@ export function ScrollLine({
   viewBox?: string;
   className?: string;
 }) {
-  // Use an HTML element as the scroll target.
+  const gradId = useId();
   const ref = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -117,9 +133,16 @@ export function ScrollLine({
         className="h-full w-full"
         fill="none"
       >
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#2B0B5E" />
+            <stop offset="55%" stopColor="#4C1D95" />
+            <stop offset="100%" stopColor="#7C3AED" />
+          </linearGradient>
+        </defs>
         <motion.path
           d={d}
-          stroke="#0A0A0A"
+          stroke={`url(#${gradId})`}
           strokeWidth="1.5"
           strokeLinecap="round"
           style={{ pathLength: len }}
@@ -128,4 +151,3 @@ export function ScrollLine({
     </div>
   );
 }
-

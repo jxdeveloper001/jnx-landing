@@ -1,21 +1,22 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { MouseEvent } from "react";
-import { content } from "../content";
+import { GLITCH_DURATION_MS, GLITCH_INTERVAL_MS, content } from "../content";
 import { scrollToHash } from "../lib/scroll";
 import Logo from "./Logo";
-import PillButton from "./PillButton";
 
-const IDS = ["home", "about", "pricing", "contact", "blog"];
+const IDS = ["home", "service", "our-works", "contact"];
 
 export default function Navbar() {
+   const shouldReduceMotion = useReducedMotion();
    const [scrolled, setScrolled] = useState(false);
    const [open, setOpen] = useState(false);
-   const [dd, setDd] = useState(false);
    const [active, setActive] = useState("home");
    const [mounted, setMounted] = useState(false);
+   const [navTheme, setNavTheme] = useState<"light" | "dark">("light");
+   const [isGlitching, setIsGlitching] = useState(false);
    const scrollYRef = useRef(0);
 
    useEffect(() => {
@@ -48,17 +49,52 @@ export default function Navbar() {
       };
    }, []);
 
-   // Lock background scrolling while the sidebar is open.
+   // Glitch v2 Timer: triggers every GLITCH_INTERVAL_MS for GLITCH_DURATION_MS
+   // Flips theme (light <-> dark) at ~45% of the burst.
+   useEffect(() => {
+      if (shouldReduceMotion) {
+         setNavTheme("light");
+         setIsGlitching(false);
+         return;
+      }
+      if (open) {
+         setIsGlitching(false);
+         return;
+      }
+
+      let flipTimer: ReturnType<typeof setTimeout> | undefined;
+      let endTimer: ReturnType<typeof setTimeout> | undefined;
+
+      const interval = setInterval(() => {
+         setIsGlitching(true);
+
+         // Flip theme at 45% of the burst (hard stepped cut)
+         flipTimer = setTimeout(() => {
+            setNavTheme((prev) => (prev === "light" ? "dark" : "light"));
+         }, Math.round(GLITCH_DURATION_MS * 0.45));
+
+         // Settle burst at GLITCH_DURATION_MS
+         endTimer = setTimeout(() => {
+            setIsGlitching(false);
+         }, GLITCH_DURATION_MS);
+      }, GLITCH_INTERVAL_MS);
+
+      return () => {
+         clearInterval(interval);
+         if (flipTimer) clearTimeout(flipTimer);
+         if (endTimer) clearTimeout(endTimer);
+      };
+   }, [shouldReduceMotion, open]);
+
+   // Lock background scrolling while the mobile menu is open.
    useEffect(() => {
       if (!open) return;
 
       const body = document.body;
       const html = document.documentElement;
 
-      // Save the current page position
       scrollYRef.current = window.scrollY;
 
-      // Lock the background page
       html.style.overflow = "hidden";
       body.style.overflow = "hidden";
       body.style.position = "fixed";
@@ -68,7 +104,6 @@ export default function Navbar() {
       body.style.width = "100%";
 
       return () => {
-         // Restore the original page styles
          html.style.overflow = "";
          body.style.overflow = "";
          body.style.position = "";
@@ -77,7 +112,6 @@ export default function Navbar() {
          body.style.right = "";
          body.style.width = "";
 
-         // Restore the exact scroll position
          window.scrollTo(0, scrollYRef.current);
       };
    }, [open]);
@@ -89,7 +123,6 @@ export default function Navbar() {
       const handleKeyDown = (event: KeyboardEvent) => {
          if (event.key === "Escape") {
             setOpen(false);
-            setDd(false);
          }
       };
 
@@ -100,7 +133,6 @@ export default function Navbar() {
 
    const closeMenu = () => {
       setOpen(false);
-      setDd(false);
    };
 
    const go = (href: string) => (event: MouseEvent<HTMLAnchorElement>) => {
@@ -121,7 +153,6 @@ export default function Navbar() {
          <AnimatePresence>
             {open && (
                <>
-                  {/* Smooth backdrop and blur */}
                   <motion.button
                      type="button"
                      aria-label="Close navigation menu"
@@ -133,14 +164,13 @@ export default function Navbar() {
                         ease: [0.22, 1, 0.36, 1],
                      }}
                      onClick={closeMenu}
-                     className="fixed inset-0 z-[100] cursor-default bg-black/30"
+                     className="fixed inset-0 z-[100] cursor-default bg-[#0A0A0F]/60"
                      style={{
                         backdropFilter: "blur(10px)",
                         WebkitBackdropFilter: "blur(10px)",
                      }}
                   />
 
-                  {/* Right-side sidebar */}
                   <motion.aside
                      initial={{ x: "100%" }}
                      animate={{ x: 0 }}
@@ -155,13 +185,12 @@ export default function Navbar() {
                      className="fixed inset-y-0 right-0 z-[110] flex h-[100dvh] w-[88%] max-w-[380px] flex-col overflow-y-auto overscroll-contain border-l border-line bg-white px-6 pb-8 pt-6 shadow-2xl sm:w-[360px] lg:hidden"
                      aria-label="Mobile navigation"
                   >
-                     {/* Sidebar header */}
                      <div className="flex items-center justify-between border-b border-line pb-5">
                         <a
                            href="#home"
                            onClick={go("#home")}
                            aria-label="JNX home"
-                           className="shrink-0"
+                           className="shrink-0 text-ink"
                         >
                            <Logo />
                         </a>
@@ -172,110 +201,49 @@ export default function Navbar() {
                            aria-label="Close menu"
                            className="grid h-10 w-10 place-items-center rounded-full border border-line transition-colors hover:bg-wash"
                         >
-                           <X size={20} />
+                           <X size={20} className="text-ink" />
                         </button>
                      </div>
 
-                     {/* Navigation links */}
                      <nav
                         className="flex-1 py-7"
                         aria-label="Mobile navigation links"
                      >
-                        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
+                        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-mute">
                            Navigation
                         </p>
 
                         <div className="flex flex-col gap-1">
-                           {content.nav.links.map((link, index) => (
-                              <div key={link.label}>
-                                 <div className="flex items-center gap-2">
-                                    <motion.a
-                                       href={link.href}
-                                       onClick={go(link.href)}
-                                       initial={{ opacity: 0, x: 12 }}
-                                       animate={{ opacity: 1, x: 0 }}
-                                       transition={{
-                                          duration: 0.35,
-                                          delay: 0.04 + index * 0.045,
-                                          ease: [0.22, 1, 0.36, 1],
-                                       }}
-                                       className={`flex-1 rounded-xl px-4 py-3.5 text-base font-medium transition-colors ${
-                                          active === link.href.replace("#", "")
-                                             ? "bg-wash text-ink"
-                                             : "text-gray-600 hover:bg-wash hover:text-ink"
-                                       }`}
-                                    >
-                                       {link.label}
-                                    </motion.a>
-
-                                    {link.dropdown && (
-                                       <button
-                                          type="button"
-                                          aria-label={`Toggle ${link.label} submenu`}
-                                          aria-expanded={dd}
-                                          onClick={() =>
-                                             setDd((value) => !value)
-                                          }
-                                          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-line hover:bg-wash"
-                                       >
-                                          <ChevronDown
-                                             size={18}
-                                             className={`transition-transform duration-300 ${
-                                                dd ? "rotate-180" : ""
-                                             }`}
-                                          />
-                                       </button>
-                                    )}
-                                 </div>
-
-                                 <AnimatePresence>
-                                    {link.dropdown && dd && (
-                                       <motion.div
-                                          initial={{ height: 0, opacity: 0 }}
-                                          animate={{
-                                             height: "auto",
-                                             opacity: 1,
-                                          }}
-                                          exit={{ height: 0, opacity: 0 }}
-                                          transition={{ duration: 0.3 }}
-                                          className="overflow-hidden"
-                                       >
-                                          <div className="ml-4 flex flex-col border-l border-line py-2 pl-3">
-                                             {link.dropdown.map((item) => (
-                                                <a
-                                                   key={item}
-                                                   href="#pricing"
-                                                   onClick={go("#pricing")}
-                                                   className="rounded-lg px-3 py-2.5 text-sm text-gray-500 transition-colors hover:bg-wash hover:text-ink"
-                                                >
-                                                   {item}
-                                                </a>
-                                             ))}
-                                          </div>
-                                       </motion.div>
-                                    )}
-                                 </AnimatePresence>
-                              </div>
-                           ))}
+                           {content.nav.links.map((link, index) => {
+                              const targetId = link.href.replace("#", "");
+                              const isActive = active === targetId;
+                              return (
+                                 <motion.a
+                                    key={link.label}
+                                    href={link.href}
+                                    onClick={go(link.href)}
+                                    initial={{ opacity: 0, x: 12 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{
+                                       duration: 0.35,
+                                       delay: 0.04 + index * 0.045,
+                                       ease: [0.22, 1, 0.36, 1],
+                                    }}
+                                    className={`flex-1 rounded-xl px-4 py-3.5 text-base font-medium transition-colors ${
+                                       isActive
+                                          ? "bg-wash text-purple font-semibold"
+                                          : "text-mute hover:bg-wash hover:text-ink"
+                                    }`}
+                                 >
+                                    {link.label}
+                                 </motion.a>
+                              );
+                           })}
                         </div>
                      </nav>
 
-                     {/* Sidebar actions */}
                      <div className="mt-auto border-t border-line pt-6">
-                        <div className="flex flex-col gap-3">
-                           <PillButton className="w-full justify-center">
-                              {content.nav.login}
-                           </PillButton>
-
-                           <PillButton
-                              variant="outline"
-                              className="w-full justify-center"
-                           >
-                              {content.nav.register}
-                           </PillButton>
-                        </div>
-
-                        <p className="mt-6 text-center text-xs text-gray-400">
+                        <p className="text-center text-xs text-mute">
                            JNX — Software Development Agency
                         </p>
                      </div>
@@ -288,136 +256,196 @@ export default function Navbar() {
 
    return (
       <>
-         <motion.header
-            initial={{ y: -80 }}
-            animate={{ y: open ? 0 : scrolled ? 0 : 16 }}
-            transition={{
-               duration: 0.4,
-               ease: [0.22, 1, 0.36, 1],
-            }}
-            className={`fixed inset-x-0 top-0 z-50 border-b transition-colors duration-300 ${
-               open
-                  ? "border-transparent"
-                  : scrolled
-                    ? "border-line bg-white/90 shadow-sm backdrop-blur-xl"
-                    : "border-transparent bg-white/70 backdrop-blur-md"
-            }`}
-         >
-            <nav
-               className="container-x mx-auto flex h-16 items-center justify-between gap-3 sm:h-20"
-               aria-label="Main navigation"
+         {/* Floating Centered Pill Navbar Container */}
+         <header className="fixed top-3 sm:top-5 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+            <motion.div
+               data-nav-theme={navTheme}
+               initial={{ y: -60, opacity: 0 }}
+               animate={{ y: 0, opacity: 1 }}
+               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+               style={{
+                  background: open ? "transparent" : "var(--nav-bg)",
+                  boxShadow: open ? "none" : "var(--nav-shadow)",
+                  color: "var(--nav-ink)",
+               }}
+               className={`pointer-events-auto relative w-full max-w-[1100px] rounded-full backdrop-blur-xl transition-all duration-300 ${
+                  isGlitching && !shouldReduceMotion && !open
+                     ? "glitching glitch-jitter"
+                     : ""
+               }`}
             >
-               {/* Logo */}
-               <a
-                  href="#home"
-                  onClick={go("#home")}
-                  aria-label="JNX home"
-                  className="relative z-[60] shrink-0"
+               {/* Border Ring Layer (absolutely positioned, glitches separately) */}
+               <div
+                  className="pointer-events-none absolute inset-0 rounded-full overflow-hidden"
+                  aria-hidden="true"
                >
-                  <Logo />
-               </a>
+                  {/* Base clean border */}
+                  <div
+                     className="absolute inset-0 rounded-full border transition-colors duration-300"
+                     style={{ borderColor: open ? "transparent" : "var(--nav-border)" }}
+                  />
 
-               {/* Desktop navigation */}
-               <ul className="hidden items-center gap-5 lg:flex xl:gap-9">
-                  {content.nav.links.map((link) => (
-                     <li
-                        key={link.label}
-                        className="relative"
-                        onMouseEnter={() => link.dropdown && setDd(true)}
-                        onMouseLeave={() => link.dropdown && setDd(false)}
-                     >
-                        <div className="flex items-center gap-1">
-                           <a
-                              href={link.href}
-                              onClick={go(link.href)}
-                              className="relative inline-flex items-center gap-1 py-2 text-sm font-medium after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-ink after:transition-transform hover:after:scale-x-100 xl:text-[15px]"
-                           >
-                              {link.label}
-                           </a>
-
-                           {link.dropdown && (
-                              <button
-                                 type="button"
-                                 aria-label={`Toggle ${link.label} submenu`}
-                                 aria-expanded={dd}
-                                 onClick={() => setDd((value) => !value)}
-                                 className="rounded p-1"
-                              >
-                                 <ChevronDown
-                                    size={15}
-                                    className={`transition-transform ${
-                                       dd ? "rotate-180" : ""
-                                    }`}
-                                 />
-                              </button>
-                           )}
-                        </div>
-
-                        {active === link.href.slice(1) &&
-                           link.label === "Home" && (
-                              <motion.span
-                                 layoutId="dot"
-                                 className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-ink"
-                              />
-                           )}
-
-                        <AnimatePresence>
-                           {link.dropdown && dd && (
-                              <motion.ul
-                                 initial={{ opacity: 0, y: 8 }}
-                                 animate={{ opacity: 1, y: 0 }}
-                                 exit={{ opacity: 0, y: 8 }}
-                                 className="absolute left-1/2 top-full z-50 w-44 -translate-x-1/2 rounded-2xl border border-line bg-white p-2 shadow-card"
-                              >
-                                 {link.dropdown.map((item) => (
-                                    <li key={item}>
-                                       <a
-                                          href="#pricing"
-                                          onClick={go("#pricing")}
-                                          className="block rounded-xl px-3 py-2 text-sm hover:bg-wash"
-                                       >
-                                          {item}
-                                       </a>
-                                    </li>
-                                 ))}
-                              </motion.ul>
-                           )}
-                        </AnimatePresence>
-                     </li>
-                  ))}
-               </ul>
-
-               {/* Desktop actions */}
-               <div className="hidden shrink-0 items-center gap-2 lg:flex xl:gap-3">
-                  <PillButton className="!px-4 !py-2.5 xl:!px-6">
-                     {content.nav.login}
-                  </PillButton>
-
-                  <PillButton
-                     variant="outline"
-                     className="!px-4 !py-2.5 xl:!px-6"
-                  >
-                     {content.nav.register}
-                  </PillButton>
+                  {/* Stepped split border rings during glitch burst */}
+                  {isGlitching && !shouldReduceMotion && !open && (
+                     <>
+                        <div className="glitch-border-purple absolute inset-0 rounded-full border-2 border-[#7C3AED]" />
+                        <div className="glitch-border-magenta absolute inset-0 rounded-full border-2 border-[#C026D3]" />
+                        <div className="glitch-border-cyan absolute inset-0 rounded-full border-2 border-[#22D3EE]" />
+                        <div
+                           className="glitch-border-main absolute inset-0 rounded-full border-2"
+                           style={{
+                              borderColor: navTheme === "dark" ? "#FFFFFF" : "#0A0A0F",
+                           }}
+                        />
+                     </>
+                  )}
                </div>
 
-               {/* Mobile menu toggle */}
-               <button
-                  type="button"
-                  className="relative z-[60] grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line bg-white sm:h-11 sm:w-11 lg:hidden"
-                  aria-label={open ? "Close menu" : "Open menu"}
-                  aria-expanded={open}
-                  onClick={() => {
-                     if (open) closeMenu();
-                     else setOpen(true);
-                  }}
+               {/* Main Clean Navigation (always legible and interactive) */}
+               <nav
+                  className="relative z-10 flex h-14 sm:h-16 items-center justify-between px-6 sm:px-8"
+                  aria-label="Main navigation"
                >
-                  {open ? <X size={20} /> : <Menu size={20} />}
-               </button>
-            </nav>
-         </motion.header>
+                  <a
+                     href="#home"
+                     onClick={go("#home")}
+                     aria-label="JNX home"
+                     className="shrink-0 transition-colors"
+                     style={{ color: "var(--nav-ink)" }}
+                  >
+                     <Logo />
+                  </a>
 
-         {/* Portal keeps the backdrop and sidebar above the page */}
+                  <ul className="hidden items-center gap-6 lg:flex xl:gap-10">
+                     {content.nav.links.map((link) => (
+                        <li key={link.label} className="relative">
+                           <div className="flex items-center gap-1">
+                              <a
+                                 href={link.href}
+                                 onClick={go(link.href)}
+                                 style={{ color: "var(--nav-ink)" }}
+                                 className="relative inline-flex items-center gap-1 py-2 text-sm font-medium after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[var(--nav-ink)] after:transition-transform hover:after:scale-x-100 xl:text-[15px]"
+                              >
+                                 {link.label}
+                              </a>
+                           </div>
+
+                           {active === link.href.slice(1) &&
+                              link.label === "Home" && (
+                                 <motion.span
+                                    layoutId="dot"
+                                    className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[var(--purple-bright)]"
+                                 />
+                              )}
+                        </li>
+                     ))}
+                  </ul>
+
+                  <button
+                     type="button"
+                     className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[var(--nav-border)] sm:h-11 sm:w-11 lg:hidden shadow-sm transition-colors"
+                     style={{
+                        color: "var(--nav-ink)",
+                        background: "var(--nav-bg)",
+                     }}
+                     aria-label={open ? "Close menu" : "Open menu"}
+                     aria-expanded={open}
+                     onClick={() => {
+                        if (open) closeMenu();
+                        else setOpen(true);
+                     }}
+                  >
+                     {open ? <X size={20} /> : <Menu size={20} />}
+                  </button>
+               </nav>
+
+               {/* Glitch v2 Burst Overlays */}
+               {isGlitching && !shouldReduceMotion && !open && (
+                  <div
+                     className="pointer-events-none absolute inset-0 overflow-hidden rounded-full z-20"
+                     aria-hidden="true"
+                  >
+                     {/* 1. Magenta Ghost split layer */}
+                     <div
+                        className="glitch-magenta absolute inset-0 flex h-14 sm:h-16 items-center justify-between px-6 sm:px-8 text-[#C026D3] opacity-85"
+                        style={{ mixBlendMode: "var(--nav-ghost-blend)" as any }}
+                     >
+                        <span className="font-extrabold text-2xl tracking-tighter">JNX</span>
+                        <ul className="hidden items-center gap-6 lg:flex xl:gap-10">
+                           {content.nav.links.map((link) => (
+                              <li key={link.label} className="py-2 text-sm font-medium xl:text-[15px]">
+                                 {link.label}
+                              </li>
+                           ))}
+                        </ul>
+                        <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border border-current lg:hidden" />
+                     </div>
+
+                     {/* 2. Cyan Ghost split layer */}
+                     <div
+                        className="glitch-cyan absolute inset-0 flex h-14 sm:h-16 items-center justify-between px-6 sm:px-8 text-[#22D3EE] opacity-85"
+                        style={{ mixBlendMode: "var(--nav-ghost-blend)" as any }}
+                     >
+                        <span className="font-extrabold text-2xl tracking-tighter">JNX</span>
+                        <ul className="hidden items-center gap-6 lg:flex xl:gap-10">
+                           {content.nav.links.map((link) => (
+                              <li key={link.label} className="py-2 text-sm font-medium xl:text-[15px]">
+                                 {link.label}
+                              </li>
+                           ))}
+                        </ul>
+                        <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border border-current lg:hidden" />
+                     </div>
+
+                     {/* 3. Slice Displacement Strips */}
+                     <div className="glitch-slice-1 absolute inset-0 flex h-14 sm:h-16 items-center justify-between px-6 sm:px-8 text-[var(--nav-ink)] opacity-90">
+                        <span className="font-extrabold text-2xl tracking-tighter">JNX</span>
+                        <ul className="hidden items-center gap-6 lg:flex xl:gap-10">
+                           {content.nav.links.map((link) => (
+                              <li key={link.label} className="py-2 text-sm font-medium xl:text-[15px]">
+                                 {link.label}
+                              </li>
+                           ))}
+                        </ul>
+                        <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border border-current lg:hidden" />
+                     </div>
+
+                     <div className="glitch-slice-2 absolute inset-0 flex h-14 sm:h-16 items-center justify-between px-6 sm:px-8 text-[var(--nav-ink)] opacity-90">
+                        <span className="font-extrabold text-2xl tracking-tighter">JNX</span>
+                        <ul className="hidden items-center gap-6 lg:flex xl:gap-10">
+                           {content.nav.links.map((link) => (
+                              <li key={link.label} className="py-2 text-sm font-medium xl:text-[15px]">
+                                 {link.label}
+                              </li>
+                           ))}
+                        </ul>
+                        <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full border border-current lg:hidden" />
+                     </div>
+
+                     {/* 4. Block Glitch Rectangles */}
+                     <div
+                        className="glitch-block-1 absolute rounded pointer-events-none"
+                        style={{ background: "var(--nav-opposite)" }}
+                     />
+                     <div
+                        className="glitch-block-2 absolute rounded pointer-events-none"
+                        style={{ background: "var(--nav-opposite)" }}
+                     />
+                     <div
+                        className="glitch-block-3 absolute rounded pointer-events-none"
+                        style={{ background: "var(--nav-opposite)" }}
+                     />
+
+                     {/* 5. Fast horizontal scanline sweep */}
+                     <div className="glitch-scanline absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#22D3EE] to-transparent pointer-events-none" />
+
+                     {/* 6. Faint RGB noise texture flicker */}
+                     <div className="glitch-noise absolute inset-0 rounded-full pointer-events-none bg-gradient-to-r from-[#C026D3]/10 via-[#22D3EE]/10 to-[#7C3AED]/10 mix-blend-overlay" />
+                  </div>
+               )}
+            </motion.div>
+         </header>
+
          {mobileDrawer}
       </>
    );
