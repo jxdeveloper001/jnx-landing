@@ -6,7 +6,7 @@ import { Scribble, Spark } from './Doodles';
 import { Hand, Phone } from './PhoneMockup';
 import PillButton from './PillButton';
 
-const BASE = 1.3; // wait for the intro to finish
+const BASE = 0.05; // entrance starts the moment the intro shutter begins to lift
 
 /* ─────────────────────────────────────────────────────────────
    Cloud SVG silhouettes (retained style, optimized vectors)
@@ -148,6 +148,14 @@ export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
   const skyRef = useRef<HTMLDivElement>(null);
   const [isLowPower, setIsLowPower] = useState(false);
+  // Flips once, when the intro shutter starts lifting, so the entrance plays as the page is revealed
+  const [go, setGo] = useState(() => window.__introLifted === true);
+  useEffect(() => {
+    if (go) return;
+    const onLift = () => setGo(true);
+    window.addEventListener('jnx:intro-lift', onLift, { once: true });
+    return () => window.removeEventListener('jnx:intro-lift', onLift);
+  }, [go]);
 
   const { scrollY } = useScroll();
   const phoneY = useTransform(scrollY, [0, 700], [0, 90]);
@@ -249,7 +257,7 @@ export default function Hero() {
             animationDelay: shouldReduceMotion ? undefined : '-8s',
           }}
         >
-          <div className="relative text-[#B8A5E0] opacity-55">
+          <div className="relative text-[#B69AE8] opacity-55">
             {/* Lead bird */}
             <div
               className="absolute bird-svg"
@@ -334,7 +342,7 @@ export default function Hero() {
               animationDelay: shouldReduceMotion ? undefined : '-20s',
             }}
           >
-            <div className="relative text-[#C4B5E8] opacity-65">
+            <div className="relative text-[#C6B2EC] opacity-65">
               {/* Lead bird */}
               <div
                 className="absolute bird-svg"
@@ -394,22 +402,9 @@ export default function Hero() {
       </div>
 
       <div className="container-x relative z-10 grid items-center gap-10 md:gap-16 md:grid-cols-2">
-        <div className="max-w-xl">
-          {/* Subtle mobile & desktop agency badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: BASE - 0.2, duration: 0.6 }}
-            className="inline-flex items-center gap-2 rounded-full border border-line bg-white/80 backdrop-blur-sm px-3.5 py-1.5 text-xs font-bold tracking-[0.18em] text-[#0A0A0F] uppercase shadow-sm mb-5 sm:mb-6"
-          >
-            <span className="h-2 w-2 rounded-full bg-gradient-to-r from-[#2B0B5E] via-[#4C1D95] to-[#7C3AED]" />
-            DIGITAL PRODUCT AGENCY
-          </motion.div>
-
-          <h1 className="relative text-[36px] min-[380px]:text-[44px] sm:text-[56px] md:text-[64px] lg:text-[72px] font-bold leading-[1.08] sm:leading-[1.04] md:leading-[1.02] text-ink">
-            <span className="absolute -right-2 -top-6 md:right-10">
-              <Spark />
-            </span>
+        <div className="max-w-xl font-arial">
+          <h1 className="relative text-[34px] min-[380px]:text-[40px] sm:text-[52px] md:text-[56px] lg:text-[64px] font-bold leading-[1.1] sm:leading-[1.08] tracking-[-0.035em] text-[#111114]">
+            <span className="absolute -right-2 -top-6 md:right-10">{go && <Spark />}</span>
             {lines.map((words, li) => (
               <span key={li} className="relative flex flex-wrap gap-x-3 sm:gap-x-4">
                 {words.map((w, wi) => (
@@ -417,31 +412,31 @@ export default function Hero() {
                     <motion.span
                       className="inline-block will-change-transform"
                       initial={{ y: '110%' }}
-                      animate={{ y: 0 }}
+                      animate={go ? { y: 0 } : undefined}
                       transition={{ delay: BASE + (li * 3 + wi) * 0.08, duration: 0.8, ease: EASE }}
                     >
                       {w}
                     </motion.span>
                   </span>
                 ))}
-                {li === lines.length - 1 && (
-                  <Scribble delay={BASE + 0.9} className="absolute -bottom-1 left-0 h-3.5 sm:h-4 w-[78%]" />
+                {go && li === lines.length - 1 && (
+                  <Scribble delay={BASE + 0.7} className="absolute -bottom-1 left-0 h-3.5 sm:h-4 w-[78%]" />
                 )}
               </span>
             ))}
           </h1>
           <motion.p
             initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: BASE + 1.2, duration: 0.7 }}
-            className="lead mt-5 sm:mt-8 max-w-md text-mute will-change-transform"
+            animate={go ? { opacity: 1, y: 0 } : undefined}
+            transition={{ delay: BASE + 0.7, duration: 0.7 }}
+            className="mt-5 sm:mt-7 max-w-[26rem] text-[15px] sm:text-[17px] leading-[1.65] tracking-[-0.005em] text-[#5E5E6B] will-change-transform"
           >
             {content.hero.sub}
           </motion.p>
           <motion.div
             initial={{ opacity: 0, scale: 0.7 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: BASE + 1.4, type: 'spring', stiffness: 260, damping: 16 }}
+            animate={go ? { opacity: 1, scale: 1 } : undefined}
+            transition={{ delay: BASE + 0.85, type: 'spring', stiffness: 260, damping: 16 }}
             className="mt-6 sm:mt-8 will-change-transform"
           >
             <PillButton magnetic arrow href="#service">
@@ -457,17 +452,13 @@ export default function Hero() {
         >
           <motion.div
             initial={{ y: 320, rotate: 8, opacity: 0 }}
-            animate={{ y: 0, rotate: 0, opacity: 1 }}
-            transition={{ delay: BASE + 0.5, type: 'spring', stiffness: 70, damping: 14 }}
+            animate={go ? { y: 0, rotate: 0, opacity: 1 } : undefined}
+            transition={{ delay: BASE + 0.1, type: 'spring', stiffness: 70, damping: 14 }}
           >
-            <motion.div
-              animate={{ y: [0, -14, 0] }}
-              transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut', delay: BASE + 1.5 }}
-              className="relative will-change-transform"
-            >
+            <div className="relative animate-phone-float">
               <Phone />
               <Hand />
-            </motion.div>
+            </div>
           </motion.div>
         </motion.div>
       </div>

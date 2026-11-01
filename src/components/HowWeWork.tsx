@@ -8,7 +8,45 @@ import {
 import type { MotionValue } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { content } from '../content';
+import { useSectionLiveBg } from '../hooks/useSectionLiveBg';
 import Reveal from './Reveal';
+
+// ── Minimal 2D Vector Silhouette for Flying Birds ────────────────────────────
+function BirdSilhouette() {
+  return (
+    <svg viewBox="0 0 32 16" fill="currentColor" className="h-full w-full">
+      <path d="M1 8 C 8 2, 14 5, 16 9 C 18 5, 24 2, 31 8 C 24 6, 18 10, 16 14 C 14 10, 8 6, 1 8 Z" />
+    </svg>
+  );
+}
+
+// ── Flowing 2D lines: each is a seamless wave tile (two periods across a 2400-wide viewBox) ──
+function wavePath(cycles: number, amp: number, y0: number, phase = 1): string {
+  const seg = 1200 / (cycles * 2);
+  let d = `M0 ${y0}`;
+  for (let i = 0; i < cycles * 4; i++) {
+    const dir = (i % 2 === 0 ? -1 : 1) * phase;
+    const x = i * seg;
+    d += ` C${(x + seg * 0.36).toFixed(1)} ${y0 + dir * amp} ${(x + seg * 0.64).toFixed(1)} ${y0 + dir * amp} ${(x + seg).toFixed(1)} ${y0}`;
+  }
+  return d;
+}
+
+const FLOW_LINES = [
+  { top: '8%', h: 180, d: wavePath(1, 70, 90), color: '#7950B5', opacity: 0.5, sw: 1.4, dur: 46, delay: -8, minTier: 0 },
+  { top: '24%', h: 180, d: wavePath(2, 46, 90, -1), color: '#B69AE8', opacity: 0.32, sw: 1, dur: 62, delay: -30, minTier: 1 },
+  { top: '42%', h: 220, d: wavePath(1, 90, 110), color: '#54258A', opacity: 0.85, sw: 1.6, dur: 54, delay: -20, minTier: 0 },
+  { top: '60%', h: 180, d: wavePath(2, 56, 90, -1), color: '#7950B5', opacity: 0.42, sw: 1.1, dur: 70, delay: -44, minTier: 1 },
+  { top: '78%', h: 180, d: wavePath(1, 64, 90), color: '#B69AE8', opacity: 0.3, sw: 1.2, dur: 50, delay: -12, minTier: 0 },
+];
+
+// 4 distinct vertical lanes ensuring birds NEVER collide or overlap vertically or horizontally
+const BIRDS_CONFIG = [
+  { id: 1, top: '11%', width: 22, height: 11, color: '#B69AE8', opacity: 0.35, duration: 29, delay: -4, anim: 'bird-solo-fly-1', flapDur: 0.65, minTier: 0 },
+  { id: 2, top: '34%', width: 18, height: 9, color: '#C6B2EC', opacity: 0.30, duration: 36, delay: -19, anim: 'bird-solo-fly-2', flapDur: 0.70, minTier: 1 },
+  { id: 3, top: '58%', width: 20, height: 10, color: '#B69AE8', opacity: 0.32, duration: 31, delay: -11, anim: 'bird-solo-fly-3', flapDur: 0.62, minTier: 0 },
+  { id: 4, top: '81%', width: 17, height: 8.5, color: '#B69AE8', opacity: 0.28, duration: 38, delay: -26, anim: 'bird-solo-fly-4', flapDur: 0.68, minTier: 1 },
+];
 
 type Step = {
   number: string;
@@ -38,22 +76,11 @@ function StepCard({
         scale,
         x,
       }}
-      className="relative w-full max-w-[440px] overflow-hidden rounded-[20px] sm:rounded-[24px] bg-white/95 border border-[#E8E6EF] p-5 sm:p-7 md:p-8 select-none shadow-[0_4px_20px_-2px_rgba(76,29,149,0.05),0_1px_3px_0_rgba(10,10,15,0.03)]"
+      className="relative w-full max-w-[440px] overflow-hidden rounded-[20px] sm:rounded-[24px] bg-white/95 border border-[#E8E6EF] p-5 sm:p-7 md:p-8 select-none shadow-[0_4px_20px_-2px_rgba(84,37,138,0.05),0_1px_3px_0_rgba(10,10,15,0.03)]"
     >
-      {/* Big faint number 01-05 on the outer side */}
-      <span
-        className={`pointer-events-none absolute -z-10 select-none font-extrabold text-[#EDEAF5] leading-none ${
-          isLeft ? '-left-4 -top-8 sm:-left-8 sm:-top-10' : '-right-4 -top-8 sm:-right-8 sm:-top-10'
-        }`}
-        style={{ fontSize: '130px', fontWeight: 800 }}
-        aria-hidden="true"
-      >
-        {step.number}
-      </span>
-
       {/* Card Content */}
       <div className="relative z-10">
-        <div className="text-[11px] sm:text-xs md:text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-[#2B0B5E] via-[#4C1D95] to-[#7C3AED] bg-clip-text text-transparent">
+        <div className="text-[11px] sm:text-xs md:text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-[#35145B] via-[#54258A] to-[#7950B5] bg-clip-text text-transparent">
           {step.number} — {step.name}
         </div>
         <h3 className="mt-2 sm:mt-3 text-lg min-[380px]:text-xl sm:text-2xl md:text-[28px] font-bold tracking-tight text-[#0A0A0F] leading-snug">
@@ -83,15 +110,15 @@ function StepNode({
     <motion.div
       ref={nodeRef}
       style={{ scale, opacity }}
-      className="relative z-20 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-[0_4px_16px_rgba(76,29,149,0.12),0_1px_3px_rgba(76,29,149,0.08)]"
+      className="relative z-20 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-b from-white to-[#F6F2FC] shadow-[0_8px_20px_-6px_rgba(84,37,138,0.38),0_1px_3px_rgba(36,17,61,0.14),inset_0_1px_0_#fff]"
       aria-hidden="true"
     >
-      <div className="h-3.5 w-3.5 rounded-full bg-gradient-to-tr from-[#2B0B5E] via-[#4C1D95] to-[#7C3AED] shadow-[0_0_8px_rgba(124,58,237,0.45)]" />
+      <div className="h-3.5 w-3.5 rounded-full bg-gradient-to-tr from-[#35145B] via-[#54258A] to-[#7950B5] shadow-[0_2px_6px_rgba(36,17,61,0.35),inset_0_1px_0_rgba(255,255,255,0.35)]" />
       {/* Synchronized highlight ring when head reaches this node */}
       {highlight && (
         <motion.div
           style={{ opacity: highlight }}
-          className="pointer-events-none absolute -inset-1 rounded-[18px] border-2 border-[var(--purple-bright)] shadow-[0_0_16px_rgba(124,58,237,0.45)]"
+          className="pointer-events-none absolute -inset-1 rounded-[18px] border-2 border-[var(--purple-bright)] shadow-[0_0_16px_rgba(121,80,181,0.45)]"
         />
       )}
     </motion.div>
@@ -266,6 +293,17 @@ export default function HowWeWork() {
   const shouldReduceMotion = useReducedMotion();
 
   const sectionRef = useRef<HTMLElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
+  const { isLowPower } = useSectionLiveBg(sectionRef, bgRef);
+
+  const activeFlow = isLowPower
+    ? FLOW_LINES.filter((f) => f.minTier === 0)
+    : FLOW_LINES;
+
+  const activeBirds = isLowPower
+    ? BIRDS_CONFIG.filter((b) => b.minTier === 0)
+    : BIRDS_CONFIG;
+
   const desktopContainerRef = useRef<HTMLDivElement>(null);
   const mobileContainerRef = useRef<HTMLDivElement>(null);
 
@@ -457,17 +495,22 @@ export default function HowWeWork() {
 
     computePaths();
 
-    const ro = new ResizeObserver(() => {
-      computePaths();
-    });
+    let rafId = 0;
+    const debouncedCompute = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(computePaths);
+    };
+
+    const ro = new ResizeObserver(debouncedCompute);
 
     if (desktopContainerRef.current) ro.observe(desktopContainerRef.current);
     if (mobileContainerRef.current) ro.observe(mobileContainerRef.current);
-    window.addEventListener('resize', computePaths);
+    window.addEventListener('resize', debouncedCompute, { passive: true });
 
     return () => {
+      cancelAnimationFrame(rafId);
       ro.disconnect();
-      window.removeEventListener('resize', computePaths);
+      window.removeEventListener('resize', debouncedCompute);
     };
   }, [c.steps.length]);
 
@@ -569,19 +612,76 @@ export default function HowWeWork() {
     <section
       ref={sectionRef}
       id="how-we-work"
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 1200px' }}
-      className="relative overflow-hidden py-16 sm:py-24 md:py-32"
+      className="relative overflow-hidden bg-gradient-to-b from-[#111114] via-[#1B1030] to-[#111114] py-16 sm:py-24 md:py-32"
     >
+      {/* ── Flying Birds Background Effect (Non-overlapping, 2D Silhouettes) ── */}
+      <div
+        ref={bgRef}
+        className="live-bg pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        aria-hidden="true"
+      >
+        {/* Flowing curved lines, masked to fade at the edges */}
+        <div className="flow-mask absolute inset-0">
+          {activeFlow.map((f, i) => (
+            <svg
+              key={i}
+              className="flow-line"
+              viewBox={`0 0 2400 ${f.h}`}
+              preserveAspectRatio="none"
+              fill="none"
+              style={{
+                top: f.top,
+                height: `${f.h / 2.4}px`,
+                opacity: f.opacity,
+                ['--flow-dur' as string]: `${f.dur}s`,
+                ['--flow-delay' as string]: `${f.delay}s`,
+              }}
+            >
+              <path d={f.d} stroke={f.color} strokeWidth={f.sw} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            </svg>
+          ))}
+        </div>
+
+        {activeBirds.map((b) => (
+          <div
+            key={b.id}
+            className="bird-track absolute"
+            style={{
+              top: b.top,
+              width: `${b.width}px`,
+              height: `${b.height}px`,
+              color: b.color,
+              opacity: b.opacity,
+              animation: shouldReduceMotion
+                ? undefined
+                : `${b.anim} ${b.duration}s linear infinite`,
+              animationDelay: shouldReduceMotion ? undefined : `${b.delay}s`,
+            }}
+          >
+            <div
+              className="bird-flap-anim h-full w-full"
+              style={{
+                animation: shouldReduceMotion
+                  ? undefined
+                  : `bird-wing-flap ${b.flapDur}s ease-in-out infinite`,
+              }}
+            >
+              <BirdSilhouette />
+            </div>
+          </div>
+        ))}
+      </div>
+
       <div className="container-x relative z-10">
         {/* Section Heading */}
         <div className="mx-auto mb-12 max-w-2xl text-center md:mb-24">
           <Reveal>
             <div className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-1.5 text-xs font-bold tracking-[0.2em] text-[#0A0A0F] uppercase shadow-sm">
-              <span className="h-2 w-2 rounded-full bg-gradient-to-r from-[#2B0B5E] via-[#4C1D95] to-[#7C3AED]" />
+              <span className="h-2 w-2 rounded-full bg-gradient-to-r from-[#35145B] via-[#54258A] to-[#7950B5]" />
               {c.eyebrow}
             </div>
-            <h2 className="h2 mt-4 sm:mt-5 text-[#0A0A0F]">{c.headline}</h2>
-            <p className="lead mt-3 sm:mt-4 text-[#6B6B7B]">{c.description}</p>
+            <h2 className="h2 mt-4 sm:mt-5 text-white">{c.headline}</h2>
+            <p className="lead mt-3 sm:mt-4 text-[#B9B4CC]">{c.description}</p>
           </Reveal>
         </div>
 
@@ -614,9 +714,9 @@ export default function HowWeWork() {
                 x2="0%"
                 y2="100%"
               >
-                <stop offset="0%" stopColor="#2B0B5E" />
-                <stop offset="50%" stopColor="#4C1D95" />
-                <stop offset="100%" stopColor="#7C3AED" />
+                <stop offset="0%" stopColor="#54258A" />
+                <stop offset="50%" stopColor="#7950B5" />
+                <stop offset="100%" stopColor="#B69AE8" />
               </linearGradient>
             </defs>
 
@@ -626,7 +726,7 @@ export default function HowWeWork() {
                 <path
                   d={desktopPathD}
                   fill="none"
-                  stroke="#E8E6EF"
+                  stroke="rgba(255,255,255,0.14)"
                   strokeWidth="3"
                   strokeLinecap="round"
                 />
@@ -651,10 +751,10 @@ export default function HowWeWork() {
                       opacity: desktopDotOpacity,
                     }}
                   >
-                    <circle r="7" fill="#7C3AED" fillOpacity="0.25" />
+                    <circle r="7" fill="#7950B5" fillOpacity="0.25" />
                     <circle
                       r="4"
-                      fill="#7C3AED"
+                      fill="#7950B5"
                       stroke="#FFFFFF"
                       strokeWidth="1.5"
                     />
@@ -709,9 +809,9 @@ export default function HowWeWork() {
                 x2="0%"
                 y2="100%"
               >
-                <stop offset="0%" stopColor="#2B0B5E" />
-                <stop offset="50%" stopColor="#4C1D95" />
-                <stop offset="100%" stopColor="#7C3AED" />
+                <stop offset="0%" stopColor="#54258A" />
+                <stop offset="50%" stopColor="#7950B5" />
+                <stop offset="100%" stopColor="#B69AE8" />
               </linearGradient>
             </defs>
             {mobilePathD && (
@@ -720,7 +820,7 @@ export default function HowWeWork() {
                 <path
                   d={mobilePathD}
                   fill="none"
-                  stroke="#E8E6EF"
+                  stroke="rgba(255,255,255,0.14)"
                   strokeWidth="3"
                   strokeLinecap="round"
                 />
@@ -744,10 +844,10 @@ export default function HowWeWork() {
                       opacity: mobileDotOpacity,
                     }}
                   >
-                    <circle r="6" fill="#7C3AED" fillOpacity="0.25" />
+                    <circle r="6" fill="#7950B5" fillOpacity="0.25" />
                     <circle
                       r="3.5"
-                      fill="#7C3AED"
+                      fill="#7950B5"
                       stroke="#FFFFFF"
                       strokeWidth="1.5"
                     />
@@ -773,7 +873,7 @@ export default function HowWeWork() {
         {/* Closing Line: Plain centered text in normal heading typography */}
         <div className="mt-14 text-center sm:mt-20 md:mt-28">
           <Reveal>
-            <h3 className="text-xl sm:text-2xl md:text-[32px] font-semibold tracking-tight text-[#0A0A0F]">
+            <h3 className="text-xl sm:text-2xl md:text-[32px] font-semibold tracking-tight text-white">
               {c.closing}
             </h3>
           </Reveal>

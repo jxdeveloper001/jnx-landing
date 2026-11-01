@@ -37,16 +37,12 @@ function Stars({ rating }: { rating: number }) {
 function CompactCard({
   item,
   avatarIndex,
-  onHoverChange,
 }: {
   item: Testimonial;
   avatarIndex: number;
-  onHoverChange?: (hovered: boolean) => void;
 }) {
   return (
     <article
-      onMouseEnter={() => onHoverChange?.(true)}
-      onMouseLeave={() => onHoverChange?.(false)}
       className="flex w-[260px] min-[380px]:w-[290px] sm:w-[330px] shrink-0 flex-col justify-between rounded-[20px] border border-line bg-white p-4 shadow-card transition-all duration-300 hover:shadow-lift sm:p-5"
     >
       <div>
@@ -87,8 +83,6 @@ export default function Testimonials() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { margin: '150px' });
   const [isTabVisible, setIsTabVisible] = useState(true);
-  const [hoveredRow1, setHoveredRow1] = useState(false);
-  const [hoveredRow2, setHoveredRow2] = useState(false);
 
   useEffect(() => {
     const handleVisibility = () => {
@@ -140,9 +134,9 @@ export default function Testimonials() {
         <div className="flex flex-col gap-4 py-2">
           {/* Top row: Moves to the RIGHT */}
           <div
-            className="flex w-max animate-marquee-right gap-4 [&:has(article:hover)]:[animation-play-state:paused]"
+            className="flex w-max animate-marquee-right gap-4 hover:[animation-play-state:paused] [&:has(article:hover)]:[animation-play-state:paused]"
             style={{
-              animationPlayState: isRunning && !hoveredRow1 ? 'running' : 'paused',
+              animationPlayState: isRunning ? 'running' : 'paused',
             }}
           >
             {row1.map((item, idx) => (
@@ -150,16 +144,15 @@ export default function Testimonials() {
                 key={`r1-${item.name}-${idx}`}
                 item={item}
                 avatarIndex={(idx % 6) + 1}
-                onHoverChange={setHoveredRow1}
               />
             ))}
           </div>
 
           {/* Bottom row: Moves to the LEFT */}
           <div
-            className="flex w-max animate-marquee-left gap-4 [&:has(article:hover)]:[animation-play-state:paused]"
+            className="flex w-max animate-marquee-left gap-4 hover:[animation-play-state:paused] [&:has(article:hover)]:[animation-play-state:paused]"
             style={{
-              animationPlayState: isRunning && !hoveredRow2 ? 'running' : 'paused',
+              animationPlayState: isRunning ? 'running' : 'paused',
             }}
           >
             {row2.map((item, idx) => (
@@ -167,7 +160,6 @@ export default function Testimonials() {
                 key={`r2-${item.name}-${idx}`}
                 item={item}
                 avatarIndex={(idx % 6) + 7}
-                onHoverChange={setHoveredRow2}
               />
             ))}
           </div>

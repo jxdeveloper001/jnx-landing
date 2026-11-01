@@ -37,7 +37,7 @@ export default function Footer() {
   const f = content.footer;
 
   return (
-    <footer className="relative z-10 rounded-t-[28px] sm:rounded-t-[36px] md:rounded-t-[40px] bg-gradient-to-br from-[#0A0A0F] to-[#150A2E] text-white">
+    <footer className="ambient-dark relative z-10 rounded-t-[28px] sm:rounded-t-[36px] md:rounded-t-[40px] bg-gradient-to-br from-[#0A0A0F] to-[#24113D] text-white">
       <motion.div
         variants={list}
         initial="hidden"

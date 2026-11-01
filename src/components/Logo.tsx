@@ -9,7 +9,7 @@ export default function Logo({
 }) {
   const sizeClasses =
     size === 'header'
-      ? 'h-[47px] sm:h-[52px] md:h-[57px]'
+      ? 'h-[52px] sm:h-[57px] md:h-[63px]'
       : 'h-10 sm:h-11 md:h-12';
 
   return (
@@ -19,6 +19,7 @@ export default function Logo({
         alt="JNX"
         width="142"
         height="70"
+        decoding="async"
         className={`${sizeClasses} w-auto object-contain transition-all duration-200 ${
           light ? 'brightness-0 invert' : ''
         }`}

@@ -142,7 +142,7 @@ function Newsletter() {
           placeholder={content.faq.placeholder}
           aria-invalid={status === 'error'}
           aria-describedby="nl-msg"
-          className={`h-13 sm:h-14 w-full rounded-full border bg-white pl-4 sm:pl-6 pr-28 sm:pr-36 text-sm sm:text-[15px] text-ink outline-none transition-colors focus:border-purple disabled:opacity-70 ${
+          className={`h-13 sm:h-14 w-full rounded-full border bg-white pl-4 sm:pl-6 pr-28 sm:pr-36 text-sm sm:text-[15px] text-ink outline-none transition-[border-color,box-shadow] focus:border-purple focus:shadow-[0_0_0_4px_rgba(121,80,181,0.14)] disabled:opacity-70 ${
             status === 'error' ? 'border-purple' : 'border-line'
           }`}
         />
@@ -204,7 +204,7 @@ function Newsletter() {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="rounded-[22px] border border-line bg-white p-4 shadow-sm transition-colors focus-within:border-purple">
+            <div className="rounded-[22px] border border-line bg-white p-4 shadow-sm transition-[border-color,box-shadow] focus-within:border-purple focus-within:shadow-[0_0_0_4px_rgba(121,80,181,0.14)]">
               <label htmlFor="nl-message" className="sr-only">
                 Your message (optional)
               </label>

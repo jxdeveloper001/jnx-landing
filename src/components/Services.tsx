@@ -1,332 +1,136 @@
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Code2,
-  LayoutGrid,
-  Monitor,
+  LifeBuoy,
+  MousePointerClick,
+  PanelsTopLeft,
   PenTool,
-  ShieldCheck,
   Smartphone,
 } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, type CSSProperties } from 'react';
 import { content } from '../content';
+import { useSectionLiveBg } from '../hooks/useSectionLiveBg';
+import { EASE } from '../lib/motion';
 
-// ── 1. Website Design: Multiple React Logos (Light-purple tint, blurred & low-opacity) ───
-function WatermarkReact() {
+// ── Minimal 2D Vector Leaf Shapes for Subtle Falling Leaves Background ────────
+function LeafShape({ shape = 1 }: { shape?: number }) {
+  if (shape === 2) {
+    // Graceful curved willow leaf
+    return (
+      <svg viewBox="0 0 26 22" fill="currentColor" className="h-full w-full">
+        <path d="M2 20 C3 11, 11 3, 24 2 C21 13, 13 21, 2 20 Z" />
+      </svg>
+    );
+  }
+  if (shape === 3) {
+    // Flutter leaf
+    return (
+      <svg viewBox="0 0 20 24" fill="currentColor" className="h-full w-full">
+        <path d="M10 2 C16 6, 17 15, 10 22 C5 17, 3 10, 10 2 Z" />
+      </svg>
+    );
+  }
+  // Classic tapered leaf with subtle center vein
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden select-none opacity-[0.08] transition-opacity duration-300 group-hover:opacity-[0.15]"
-    >
-      {/* Large React atomic symbol in top-right */}
-      <svg
-        className="absolute -right-8 -top-8 h-48 w-48 text-[#7C3AED] blur-[0.8px]"
-        viewBox="-11.5 -10.23174 23 20.46348"
-        fill="currentColor"
-      >
-        <circle cx="0" cy="0" r="2.05" fill="currentColor" />
-        <g stroke="currentColor" strokeWidth="1" fill="none">
-          <ellipse rx="11" ry="4.2" />
-          <ellipse rx="11" ry="4.2" transform="rotate(60)" />
-          <ellipse rx="11" ry="4.2" transform="rotate(120)" />
-        </g>
-      </svg>
-      {/* Secondary smaller React logo in bottom-left */}
-      <svg
-        className="absolute -bottom-6 -left-6 h-28 w-28 text-[#9333EA] blur-[0.8px]"
-        viewBox="-11.5 -10.23174 23 20.46348"
-        fill="currentColor"
-      >
-        <circle cx="0" cy="0" r="2.05" fill="currentColor" />
-        <g stroke="currentColor" strokeWidth="1" fill="none">
-          <ellipse rx="11" ry="4.2" />
-          <ellipse rx="11" ry="4.2" transform="rotate(60)" />
-          <ellipse rx="11" ry="4.2" transform="rotate(120)" />
-        </g>
-      </svg>
-      {/* Small floating React accent */}
-      <svg
-        className="absolute top-1/2 right-1/4 h-16 w-16 text-[#7C3AED] blur-[0.5px] opacity-70"
-        viewBox="-11.5 -10.23174 23 20.46348"
-        fill="currentColor"
-      >
-        <circle cx="0" cy="0" r="2.05" fill="currentColor" />
-        <g stroke="currentColor" strokeWidth="1" fill="none">
-          <ellipse rx="11" ry="4.2" />
-          <ellipse rx="11" ry="4.2" transform="rotate(60)" />
-          <ellipse rx="11" ry="4.2" transform="rotate(120)" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
-// ── 2. Website Development: Binary 0 & 1 Pattern (Light-purple tint) ─────────────
-function WatermarkBinary() {
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden select-none opacity-[0.08] transition-opacity duration-300 group-hover:opacity-[0.15]"
-    >
-      <div className="absolute -right-3 -top-3 font-mono text-xs sm:text-[13px] leading-relaxed text-[#7C3AED] tracking-[0.22em] blur-[0.6px] select-none text-right">
-        <div>01001010 01001110 01011000</div>
-        <div>11010010 10110101 01100001</div>
-        <div>00101101 01100100 11010110</div>
-        <div>10100101 01110011 00101010</div>
-        <div>01101011 11010100 10101100</div>
-        <div>10010110 00101101 01100111</div>
-        <div>01010100 10101100 11010010</div>
-        <div>11001010 01101001 00101101</div>
-      </div>
-      <svg
-        className="absolute left-2 bottom-2 h-20 w-36 text-[#9333EA] blur-[1px]"
-        viewBox="0 0 160 80"
-        fill="none"
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
+      <path d="M12 2 C19 6, 21 16, 12 22 C3 16, 5 6, 12 2 Z" opacity="0.9" />
+      <path
+        d="M12 4 C12 10, 12 16, 12 20"
         stroke="currentColor"
-        strokeWidth="1.2"
-      >
-        <path d="M10 20 L40 20 L55 50 L100 50 L115 25 L150 25" strokeDasharray="3 3" />
-        <circle cx="10" cy="20" r="3" fill="currentColor" />
-        <circle cx="150" cy="25" r="3" fill="currentColor" />
-        <circle cx="100" cy="50" r="3" fill="currentColor" />
-      </svg>
-    </div>
-  );
-}
-
-// ── 3. App Development: YouTube, Facebook, Instagram, LinkedIn Logos (Light-purple) ──
-function WatermarkAppPlatforms() {
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden select-none opacity-[0.08] transition-opacity duration-300 group-hover:opacity-[0.15]"
-    >
-      {/* YouTube icon */}
-      <svg
-        className="absolute top-3 right-4 h-15 w-15 text-[#7C3AED] blur-[0.8px]"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-      >
-        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-      </svg>
-      {/* Instagram icon */}
-      <svg
-        className="absolute bottom-2 right-8 h-16 w-16 text-[#9333EA] blur-[0.8px]"
-        viewBox="0 0 24 24"
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        opacity="0.6"
         fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      >
-        <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeWidth="2.5" strokeLinecap="round" />
-      </svg>
-      {/* Facebook "f" */}
-      <svg
-        className="absolute bottom-2 left-3 h-14 w-14 text-[#7C3AED] blur-[0.8px]"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-      >
-        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-      </svg>
-      {/* LinkedIn "in" */}
-      <svg
-        className="absolute top-6 left-1/3 h-11 w-11 text-[#A855F7] blur-[0.8px]"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-      >
-        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-      </svg>
-    </div>
+      />
+    </svg>
   );
 }
 
-// ── 4. UI/UX Design: Chipset & Circuit Pattern (Light-purple tint) ─────────────
-function WatermarkChipset() {
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden select-none opacity-[0.08] transition-opacity duration-300 group-hover:opacity-[0.15]"
-    >
-      <svg
-        className="absolute -right-4 -bottom-4 h-44 w-44 text-[#7C3AED] blur-[0.6px]"
-        viewBox="0 0 120 120"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.2"
-      >
-        <rect x="35" y="35" width="50" height="50" rx="8" strokeWidth="1.8" fill="rgba(124,58,237,0.06)" />
-        <rect x="43" y="43" width="34" height="34" rx="4" strokeDasharray="3 2" />
-        <circle cx="60" cy="60" r="6" fill="currentColor" fillOpacity="0.2" />
-        {/* Top Pins */}
-        <line x1="45" y1="35" x2="45" y2="15" />
-        <line x1="55" y1="35" x2="55" y2="10" />
-        <line x1="65" y1="35" x2="65" y2="10" />
-        <line x1="75" y1="35" x2="75" y2="15" />
-        {/* Bottom Pins */}
-        <line x1="45" y1="85" x2="45" y2="105" />
-        <line x1="55" y1="85" x2="55" y2="110" />
-        <line x1="65" y1="85" x2="65" y2="110" />
-        <line x1="75" y1="85" x2="75" y2="105" />
-        {/* Left Pins */}
-        <line x1="35" y1="45" x2="15" y2="45" />
-        <line x1="35" y1="55" x2="10" y2="55" />
-        <line x1="35" y1="65" x2="10" y2="65" />
-        <line x1="35" y1="75" x2="15" y2="75" />
-        {/* Right Pins with angled traces */}
-        <path d="M85 45 L105 45 L115 35" />
-        <path d="M85 55 L110 55" />
-        <path d="M85 65 L110 65" />
-        <path d="M85 75 L105 75 L115 85" />
-        <circle cx="45" cy="15" r="2" fill="currentColor" />
-        <circle cx="75" cy="15" r="2" fill="currentColor" />
-        <circle cx="15" cy="45" r="2" fill="currentColor" />
-        <circle cx="15" cy="75" r="2" fill="currentColor" />
-        <circle cx="115" cy="35" r="2" fill="currentColor" />
-        <circle cx="115" cy="85" r="2" fill="currentColor" />
-      </svg>
-    </div>
-  );
-}
-
-// ── 5. Branding & Logo: Pen-tool Curves & Design Elements (Light-purple tint) ────
-function WatermarkBranding() {
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden select-none opacity-[0.08] transition-opacity duration-300 group-hover:opacity-[0.15]"
-    >
-      <svg
-        className="absolute -right-2 top-0 h-44 w-44 text-[#7C3AED] blur-[0.7px]"
-        viewBox="0 0 140 140"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      >
-        <path d="M10 110 C 40 40, 90 130, 130 30" strokeWidth="1.8" />
-        <path d="M20 120 C 60 70, 100 110, 135 50" strokeDasharray="3 3" />
-        <line x1="40" y1="40" x2="65" y2="45" strokeDasharray="2 2" />
-        <circle cx="40" cy="40" r="3" fill="currentColor" />
-        <circle cx="65" cy="45" r="2" fill="none" strokeWidth="1.5" />
-        <g transform="translate(75, 45) rotate(45)">
-          <path d="M0 0 L10 25 L5 30 L0 18 L-5 30 L-10 25 Z" fill="currentColor" fillOpacity="0.25" stroke="currentColor" strokeWidth="1.2" />
-          <circle cx="0" cy="12" r="1.5" fill="currentColor" />
-          <line x1="0" y1="12" x2="0" y2="0" stroke="currentColor" strokeWidth="1" />
-        </g>
-        <circle cx="95" cy="95" r="30" strokeWidth="1" strokeDasharray="4 2" />
-        <circle cx="95" cy="95" r="18" strokeWidth="1" />
-      </svg>
-    </div>
-  );
-}
-
-// ── 6. Maintenance & Support: Security Shield & Lock (Light-purple tint) ─────────
-function WatermarkSecurity() {
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden select-none opacity-[0.08] transition-opacity duration-300 group-hover:opacity-[0.15]"
-    >
-      <svg
-        className="absolute right-0 -bottom-2 h-42 w-42 text-[#7C3AED] blur-[0.7px]"
-        viewBox="0 0 120 120"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      >
-        <path
-          d="M60 15 L95 28 C95 65 78 88 60 102 C42 88 25 65 25 28 Z"
-          fill="rgba(124,58,237,0.05)"
-          strokeWidth="1.8"
-        />
-        <rect x="48" y="55" width="24" height="18" rx="3" strokeWidth="1.5" fill="currentColor" fillOpacity="0.15" />
-        <path d="M53 55 V47 C53 43 56 40 60 40 C64 40 67 43 67 47 V55" strokeWidth="1.8" />
-        <circle cx="60" cy="63" r="2" fill="currentColor" />
-        <line x1="60" y1="65" x2="60" y2="69" strokeWidth="1.5" />
-        <circle cx="60" cy="60" r="48" strokeDasharray="3 4" strokeWidth="0.8" />
-      </svg>
-    </div>
-  );
-}
-
-const WATERMARKS = [
-  WatermarkReact,
-  WatermarkBinary,
-  WatermarkAppPlatforms,
-  WatermarkChipset,
-  WatermarkBranding,
-  WatermarkSecurity,
+const LEAVES_CONFIG = [
+  { id: 1, left: '8%', width: 17, color: '#C6B2EC', opacity: 0.28, duration: 18, delay: -4, shape: 1, sway: 'leaf-sway-1', swayDur: 4.8, minTier: 0 },
+  { id: 2, left: '22%', width: 14, color: '#DDD0F5', opacity: 0.24, duration: 23, delay: -11, shape: 2, sway: 'leaf-sway-2', swayDur: 5.4, minTier: 1 },
+  { id: 3, left: '37%', width: 19, color: '#B69AE8', opacity: 0.20, duration: 16, delay: -17, shape: 3, sway: 'leaf-sway-3', swayDur: 4.2, minTier: 0 },
+  { id: 4, left: '52%', width: 16, color: '#C6B2EC', opacity: 0.26, duration: 20, delay: -7, shape: 1, sway: 'leaf-sway-2', swayDur: 5.0, minTier: 1 },
+  { id: 5, left: '68%', width: 21, color: '#DDD0F5', opacity: 0.22, duration: 17, delay: -13, shape: 2, sway: 'leaf-sway-1', swayDur: 4.6, minTier: 0 },
+  { id: 6, left: '82%', width: 15, color: '#B69AE8', opacity: 0.22, duration: 24, delay: -3, shape: 3, sway: 'leaf-sway-3', swayDur: 5.6, minTier: 0 },
+  { id: 7, left: '94%', width: 18, color: '#C6B2EC', opacity: 0.25, duration: 19, delay: -15, shape: 1, sway: 'leaf-sway-2', swayDur: 4.9, minTier: 1 },
 ];
 
 const SERVICE_ICONS = [
-  Monitor,
+  PanelsTopLeft,
   Code2,
   Smartphone,
-  LayoutGrid,
+  MousePointerClick,
   PenTool,
-  ShieldCheck,
+  LifeBuoy,
 ];
+
+// One geometric motif per card, all drawn from the same violet hairline system.
+const VIOLET = 'rgba(121,80,181,0.32)';
+const MOTIFS: CSSProperties[] = [
+  { backgroundImage: `linear-gradient(${VIOLET} 1px, transparent 1px), linear-gradient(90deg, ${VIOLET} 1px, transparent 1px)`, backgroundSize: '18px 18px' },
+  { backgroundImage: `radial-gradient(${VIOLET} 1.4px, transparent 1.6px)`, backgroundSize: '14px 14px' },
+  { backgroundImage: `repeating-linear-gradient(135deg, ${VIOLET} 0 1px, transparent 1px 12px)` },
+  { backgroundImage: `repeating-radial-gradient(circle at 100% 0, ${VIOLET} 0 1px, transparent 1px 14px)` },
+  { backgroundImage: `repeating-linear-gradient(0deg, ${VIOLET} 0 1px, transparent 1px 11px)` },
+  { backgroundImage: `repeating-linear-gradient(45deg, ${VIOLET} 0 1px, transparent 1px 12px), repeating-linear-gradient(-45deg, ${VIOLET} 0 1px, transparent 1px 12px)` },
+];
+const MOTIF_MASK = 'radial-gradient(circle at 100% 0, #000 0%, transparent 62%)';
 
 function ServiceCard({
   item,
   index,
-  shouldReduceMotion,
 }: {
   item: (typeof content.services.items)[number];
   index: number;
-  shouldReduceMotion: boolean | null;
 }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const stagger = (index % 3) * 0.025;
-  const startOffset = `${Math.round((0.93 - stagger) * 100)}%`;
-  const endOffset = `${Math.round((0.67 - stagger) * 100)}%`;
-
-  const { scrollYProgress } = useScroll({
-    target: cardRef,
-    offset: [`start ${startOffset}` as any, `start ${endOffset}` as any],
-  });
-
-  const y = useTransform(scrollYProgress, [0, 1], [30, 0]);
-  const opacity = useTransform(scrollYProgress, [0, 0.35, 1], [0.15, 0.65, 1]);
-  const blurPx = useTransform(scrollYProgress, [0, 0.85, 1], [7, 1, 0]);
-  const filter = useTransform(blurPx, (v) => (v > 0.08 ? `blur(${v.toFixed(1)}px)` : 'none'));
-
-  const motionStyle = shouldReduceMotion
-    ? { opacity: 1, y: 0, filter: 'none' }
-    : { opacity, y, filter };
-
-  const Watermark = WATERMARKS[index] || WatermarkReact;
-  const Icon = SERVICE_ICONS[index] || Monitor;
+  const Icon = SERVICE_ICONS[index] || PanelsTopLeft;
 
   return (
     <motion.article
-      ref={cardRef}
-      style={{
-        ...motionStyle,
-        willChange: shouldReduceMotion ? 'auto' : 'transform, opacity, filter',
-      }}
-      className="group relative flex flex-col items-center text-center rounded-3xl bg-white/95 px-6 pb-7 pt-11 sm:px-7 sm:pb-8 sm:pt-12 shadow-[0_10px_35px_-8px_rgba(76,29,149,0.08),0_2px_12px_rgba(10,10,15,0.03)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_22px_45px_-10px_rgba(76,29,149,0.16)]"
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.65, delay: (index % 3) * 0.08, ease: EASE }}
+      className="group relative flex h-full flex-col overflow-hidden rounded-br-[44px] rounded-tl-[44px] rounded-bl-2xl rounded-tr-2xl border border-[#E8E6EF] bg-white p-6 pt-7 shadow-[0_1px_2px_rgba(17,17,20,0.04),0_16px_30px_-20px_rgba(36,17,61,0.3)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1.5 hover:border-[#B69AE8] hover:shadow-[0_2px_4px_rgba(36,17,61,0.06),0_30px_46px_-22px_rgba(84,37,138,0.5),0_0_0_1px_rgba(121,80,181,0.12)] sm:p-7 sm:pt-8"
     >
-      {/* Floating 2D Vector Icon Badge at Top Center (Slightly overlapping card top edge) */}
-      <div className="absolute -top-6.5 sm:-top-7 left-1/2 -translate-x-1/2 z-20 flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-white shadow-[0_6px_20px_-3px_rgba(76,29,149,0.18),0_2px_6px_rgba(10,10,15,0.04)] border border-purple-50 transition-transform duration-300 group-hover:scale-110">
-        <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-[#7C3AED] stroke-[1.8]" aria-hidden="true" />
+      {/* Geometric motif fading out from the top-right corner */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute right-0 top-0 h-40 w-40 opacity-60 transition-opacity duration-500 group-hover:opacity-100"
+        style={{ ...MOTIFS[index], WebkitMaskImage: MOTIF_MASK, maskImage: MOTIF_MASK }}
+      />
+      {/* Lower tonal surface layer */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#F7F5FC] to-transparent"
+      />
+
+      {/* Icon: charcoal tile with an offset violet outline behind it */}
+      <div className="relative z-10 h-14 w-14 sm:h-16 sm:w-16">
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-2xl border border-[#7950B5]/50 transition-transform duration-300 group-hover:translate-x-2.5 group-hover:translate-y-2.5"
+        />
+        <span className="absolute inset-0 grid place-items-center rounded-2xl bg-[#111114] text-white shadow-[0_8px_16px_-8px_rgba(36,17,61,0.6),inset_0_1px_0_rgba(255,255,255,0.12)] transition-[background-color,box-shadow] duration-300 group-hover:bg-[#54258A] group-hover:shadow-[0_12px_22px_-6px_rgba(121,80,181,0.65),inset_0_1px_0_rgba(255,255,255,0.28)]">
+          <Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.6} aria-hidden="true" />
+        </span>
       </div>
 
-      {/* Topic-Related Light-Purple Blurred Background Watermark */}
-      <Watermark />
+      <h3 className="relative z-10 mt-7 text-lg font-bold tracking-tight text-[#111114] sm:text-xl md:text-[22px]">
+        {item.title}
+      </h3>
+      <p className="relative z-10 mt-2.5 text-[14px] leading-relaxed text-[#5A5A6D] sm:text-[15px]">
+        {item.text}
+      </p>
 
-      {/* Card Content Area */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-between w-full">
-        <div>
-          {/* Clear Service Title */}
-          <h3 className="text-lg sm:text-xl md:text-[22px] font-bold tracking-tight text-[#0A0A0F] transition-colors duration-200 group-hover:text-[var(--purple-bright)]">
-            {item.title}
-          </h3>
-
-          {/* Short, Readable Description */}
-          <p className="mt-2.5 sm:mt-3 text-[13px] sm:text-sm md:text-[15px] leading-relaxed text-[#5A5A6D]">
-            {item.text}
-          </p>
-        </div>
+      <div className="relative z-10 mt-auto flex items-center gap-3 pt-6" aria-hidden="true">
+        <span className="text-xs font-bold tabular-nums tracking-[0.2em] text-[#111114]">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+        <span className="relative h-px flex-1 bg-[#E3E0EC]">
+          <span className="absolute inset-y-0 left-0 w-full origin-left scale-x-[0.18] bg-[#7950B5] transition-transform duration-500 ease-out group-hover:scale-x-100" />
+        </span>
       </div>
     </motion.article>
   );
@@ -335,9 +139,17 @@ function ServiceCard({
 export default function Services() {
   const s = content.services;
   const shouldReduceMotion = useReducedMotion();
+  const sectionRef = useRef<HTMLElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
+  const { isLowPower } = useSectionLiveBg(sectionRef, bgRef);
+
+  const activeLeaves = isLowPower
+    ? LEAVES_CONFIG.filter((l) => l.minTier === 0)
+    : LEAVES_CONFIG;
 
   return (
     <section
+      ref={sectionRef}
       id="service"
       className="relative overflow-hidden py-16 sm:py-20 md:py-28"
     >
@@ -348,19 +160,55 @@ export default function Services() {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute right-0 top-1/4 h-[420px] w-[420px] translate-x-1/3 rounded-full opacity-[0.06]"
-        style={{ background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, #7950B5 0%, transparent 70%)' }}
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-0 bottom-1/4 h-[380px] w-[380px] -translate-x-1/3 rounded-full opacity-[0.04]"
-        style={{ background: 'radial-gradient(circle, #4C1D95 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, #54258A 0%, transparent 70%)' }}
       />
+
+      {/* ── Falling Leaves Background Effect (Atmospheric, 2D Vector) ── */}
+      <div
+        ref={bgRef}
+        className="live-bg pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        aria-hidden="true"
+      >
+        {activeLeaves.map((leaf) => (
+          <div
+            key={leaf.id}
+            className="leaf-track absolute"
+            style={{
+              left: leaf.left,
+              top: 0,
+              width: `${leaf.width}px`,
+              height: `${leaf.width * 1.1}px`,
+              color: leaf.color,
+              opacity: leaf.opacity,
+              animation: shouldReduceMotion
+                ? undefined
+                : `leaf-fall ${leaf.duration}s linear infinite`,
+              animationDelay: shouldReduceMotion ? undefined : `${leaf.delay}s`,
+            }}
+          >
+            <div
+              style={{
+                animation: shouldReduceMotion
+                  ? undefined
+                  : `${leaf.sway} ${leaf.swayDur}s ease-in-out infinite`,
+              }}
+            >
+              <LeafShape shape={leaf.shape} />
+            </div>
+          </div>
+        ))}
+      </div>
 
       <div className="container-x relative z-10">
         {/* Section Header */}
         <div className="mx-auto mb-12 max-w-2xl text-center md:mb-20">
           <div className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-1.5 text-xs font-bold tracking-[0.2em] text-[#0A0A0F] uppercase shadow-sm mb-4">
-            <span className="h-2 w-2 rounded-full bg-gradient-to-r from-[#2B0B5E] via-[#4C1D95] to-[#7C3AED]" />
+            <span className="h-2 w-2 rounded-full bg-gradient-to-r from-[#35145B] via-[#54258A] to-[#7950B5]" />
             OUR SERVICES
           </div>
           <h2 className="text-2xl min-[380px]:text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0A0A0F]">
@@ -372,13 +220,12 @@ export default function Services() {
         </div>
 
         {/* Clean, Premium 6-Card Layout: 3 Columns Desktop, 2 Columns Tablet, 1 Column Mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-11 sm:gap-x-8 sm:gap-y-14 lg:gap-x-8 lg:gap-y-14 items-stretch pt-4 sm:pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-7 items-stretch">
           {s.items.map((item, idx) => (
             <ServiceCard
               key={item.title + idx}
               item={item}
               index={idx}
-              shouldReduceMotion={shouldReduceMotion}
             />
           ))}
         </div>

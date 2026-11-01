@@ -54,9 +54,9 @@ export default function ScrollLine({
             x2={direction === 'rtl' ? '0%' : '100%'}
             y2="100%"
           >
-            <stop offset="0%" stopColor="#2B0B5E" />
-            <stop offset="55%" stopColor="#4C1D95" />
-            <stop offset="100%" stopColor="#7C3AED" />
+            <stop offset="0%" stopColor="#35145B" />
+            <stop offset="55%" stopColor="#54258A" />
+            <stop offset="100%" stopColor="#7950B5" />
           </linearGradient>
         </defs>
         <motion.path

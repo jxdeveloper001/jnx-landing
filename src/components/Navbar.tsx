@@ -2,6 +2,7 @@ import {
   AnimatePresence,
   motion,
   useReducedMotion,
+  useMotionValueEvent,
   useScroll,
   useSpring,
   useTransform,
@@ -20,6 +21,9 @@ export default function Navbar() {
   const shouldReduceMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState('home');
+  const [hovered, setHovered] = useState<string | null>(null);
+  // True while the header shell is shown (hysteresis avoids flicker near the threshold)
+  const [condensed, setCondensed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const scrollYRef = useRef(0);
 
@@ -53,6 +57,10 @@ export default function Navbar() {
     damping: 34,
     mass: 0.2,
     restDelta: 0.001,
+  });
+
+  useMotionValueEvent(scrollY, 'change', (y) => {
+    setCondensed((prev) => (prev ? y > 14 : y > 30));
   });
 
   const progress = shouldReduceMotion ? progressRaw : progressSpring;
@@ -161,7 +169,7 @@ export default function Navbar() {
                 ease: [0.22, 1, 0.36, 1],
               }}
               onClick={closeMenu}
-              className="fixed inset-0 z-[100] cursor-default bg-[#0A0A0F]/60 backdrop-blur-md"
+              className="fixed inset-0 z-[100] cursor-default bg-[#0A0A0F]/70"
             />
 
             <motion.aside
@@ -257,7 +265,7 @@ export default function Navbar() {
   return (
     <>
       {/* Floating Centered Pill Navbar Container */}
-      <header className="fixed top-3 sm:top-5 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+      <header data-condensed={condensed && !open ? 'true' : 'false'} className="fixed top-3 sm:top-5 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
         <motion.div
           initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -282,8 +290,8 @@ export default function Navbar() {
                 opacity: shellOpacity,
                 background: 'var(--nav-bg)',
                 boxShadow: 'var(--nav-shadow)',
-                backdropFilter: 'blur(24px)',
-                WebkitBackdropFilter: 'blur(24px)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
               }}
               aria-hidden="true"
             >
@@ -306,31 +314,49 @@ export default function Navbar() {
                 className="shrink-0 transition-colors"
                 style={{ color: 'var(--nav-ink)' }}
               >
-                <Logo size="header" />
+                <Logo size="header" className="nav-logo" />
               </a>
 
-              <ul className="hidden items-center gap-6 lg:flex xl:gap-10">
-                {content.nav.links.map((link) => (
-                  <li key={link.label} className="relative">
-                    <div className="flex items-center gap-1">
+              <ul
+                className="hidden translate-y-[2px] items-center gap-1 lg:flex"
+                onMouseLeave={() => setHovered(null)}
+              >
+                {content.nav.links.map((link) => {
+                  const id = link.href.slice(1);
+                  const isActive = active === id;
+                  const isIndicated = (hovered ?? active) === id;
+                  return (
+                    <li key={link.label} className="relative">
                       <a
                         href={link.href}
                         onClick={go(link.href)}
-                        style={{ color: 'var(--nav-ink)' }}
-                        className="relative inline-flex items-center gap-1 py-2 text-sm font-medium after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-[var(--nav-ink)] after:transition-transform hover:after:scale-x-100 xl:text-[15px]"
+                        onMouseEnter={() => setHovered(id)}
+                        onFocus={() => setHovered(id)}
+                        onBlur={() => setHovered(null)}
+                        aria-current={isActive ? 'true' : undefined}
+                        className={`group relative inline-flex items-center px-3.5 py-2.5 text-sm font-medium transition-colors duration-300 xl:px-4 xl:text-[15px] ${
+                          isIndicated ? 'text-purple-bright' : 'text-ink/70'
+                        } ${isActive ? 'font-semibold' : ''}`}
                       >
-                        {link.label}
+                        <span
+                          className={`block transition-transform duration-300 ease-out ${
+                            hovered === id && !isActive ? '-translate-y-px' : ''
+                          }`}
+                        >
+                          {link.label}
+                        </span>
+                        {isIndicated && (
+                          <motion.span
+                            layoutId="nav-indicator"
+                            aria-hidden="true"
+                            transition={{ type: 'spring', stiffness: 520, damping: 38, mass: 0.6 }}
+                            className="absolute inset-x-3.5 bottom-1 h-[2px] rounded-full bg-gradient-to-r from-purple to-purple-bright shadow-[0_2px_8px_-1px_rgba(121,80,181,0.55)] xl:inset-x-4"
+                          />
+                        )}
                       </a>
-                    </div>
-
-                    {active === link.href.slice(1) && link.label === 'Home' && (
-                      <motion.span
-                        layoutId="dot"
-                        className="absolute -bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[var(--purple-bright)]"
-                      />
-                    )}
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
 
               <button

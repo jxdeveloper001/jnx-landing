@@ -33,9 +33,9 @@ export function Spark({
     >
       <defs>
         <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#2B0B5E" />
-          <stop offset="55%" stopColor="#4C1D95" />
-          <stop offset="100%" stopColor="#7C3AED" />
+          <stop offset="0%" stopColor="#35145B" />
+          <stop offset="55%" stopColor="#54258A" />
+          <stop offset="100%" stopColor="#7950B5" />
         </linearGradient>
       </defs>
       <motion.path d="M8 6 L14 16" {...p} />
@@ -80,9 +80,9 @@ export function Scribble({
     >
       <defs>
         <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#2B0B5E" />
-          <stop offset="55%" stopColor="#4C1D95" />
-          <stop offset="100%" stopColor="#7C3AED" />
+          <stop offset="0%" stopColor="#35145B" />
+          <stop offset="55%" stopColor="#54258A" />
+          <stop offset="100%" stopColor="#7950B5" />
         </linearGradient>
       </defs>
       <motion.path

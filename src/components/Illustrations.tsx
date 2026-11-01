@@ -5,7 +5,7 @@ export function Landscape({ v = 0, className = 'h-full w-full' }: { v?: number; 
     <svg viewBox="0 0 100 100" className={className} preserveAspectRatio="xMidYMid slice" aria-hidden>
       <rect width="100" height="100" fill={bg} />
       <circle cx={20 + ((v * 13) % 60)} cy="26" r={v % 2 ? 9 : 12} fill="#FFFFFF" opacity=".9" />
-      <path d={`M0 72 L${25 + (v % 3) * 8} 38 L${52 + (v % 2) * 10} 72 Z`} fill="#8C7DAA" />
+      <path d={`M0 72 L${25 + (v % 3) * 8} 38 L${52 + (v % 2) * 10} 72 Z`} fill="#8A78AE" />
       <path d="M30 76 L68 32 L108 76 Z" fill="#5A437E" />
       <path d="M0 100 V78 Q50 62 100 80 V100Z" fill="#0A0A0F" />
       {v % 2 === 0 && <path d="M72 82 l5-14 5 14z M80 82 l4-10 4 10z" fill="#FFFFFF" opacity=".6" />}
@@ -16,9 +16,9 @@ export function Landscape({ v = 0, className = 'h-full w-full' }: { v?: number; 
 /** Cartoon avatar with black & purple palette. */
 export function Avatar({ v = 0, className = 'h-full w-full' }: { v?: number; className?: string }) {
   const skin = ['#EAE4F4', '#DDD4EB', '#F5F1FA', '#D4C8E6'][v % 4];
-  const hair = ['#0A0A0F', '#26262F', '#4C1D95', '#1A1A22'][(v + 1) % 4];
+  const hair = ['#0A0A0F', '#26262F', '#54258A', '#1A1A22'][(v + 1) % 4];
   const bg = ['#F7F6FA', '#EBE5F5', '#FAF8FC'][v % 3];
-  const shirt = ['#0A0A0F', '#4C1D95', '#26262F'][v % 3];
+  const shirt = ['#0A0A0F', '#54258A', '#26262F'][v % 3];
 
   return (
     <svg viewBox="0 0 100 100" className={className} aria-hidden>
